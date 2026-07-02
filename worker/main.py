@@ -3,8 +3,10 @@ from pathlib import Path
 
 from app.engine import MonitoringEngine
 from app.models import Transaction
-from app.transaction_queue import QUEUE_NAME, dequeue_transaction, get_backend_name
 from app.storage import append_jsonl, write_json
+from app.transaction_queue import QUEUE_NAME, dequeue_transaction, get_backend_name
+from db.repository import save_transaction_result
+from db.session import DATABASE_URL, initialize_database
 
 
 OUTPUT_DIR = Path("output")
@@ -15,12 +17,14 @@ SUMMARY_FILE = OUTPUT_DIR / "summary.json"
 
 def run_worker() -> None:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    initialize_database()
 
     engine = MonitoringEngine()
 
     print("Transaction worker started.")
     print(f"Queue backend: {get_backend_name()}")
     print(f"Listening on queue: {QUEUE_NAME}")
+    print(f"Database URL: {DATABASE_URL}")
 
     while True:
         try:
@@ -32,6 +36,8 @@ def run_worker() -> None:
 
             transaction = Transaction.from_dict(payload)
             alert = engine.process_transaction(transaction)
+
+            save_transaction_result(transaction, alert)
 
             append_jsonl(
                 str(TRANSACTIONS_FILE),
