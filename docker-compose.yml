@@ -10,6 +10,18 @@ services:
         source: ./output
         target: /app/output
 
+  transaction-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: transaction-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - type: bind
+        source: ./output
+        target: /app/output
+
   transaction-dashboard:
     build:
       context: .
