@@ -10,3 +10,4 @@ psycopg[binary]>=3.2.3
 PyYAML>=6.0.2
 scikit-learn>=1.6.1
 numpy>=2.1.0
+prometheus-client>=0.21.1

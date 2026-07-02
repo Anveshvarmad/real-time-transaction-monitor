@@ -31,6 +31,7 @@ services:
       QUEUE_BACKEND: redis
       REDIS_URL: redis://redis:6379/0
       TRANSACTION_QUEUE: transactions:incoming
+      PYTHONPATH: /app
     ports:
       - "8000:8000"
     depends_on:
@@ -46,6 +47,10 @@ services:
       REDIS_URL: redis://redis:6379/0
       TRANSACTION_QUEUE: transactions:incoming
       DATABASE_URL: postgresql+psycopg://monitor:monitor@postgres:5432/transaction_monitor
+      WORKER_METRICS_PORT: 9100
+      PYTHONPATH: /app
+    ports:
+      - "9100:9100"
     volumes:
       - type: bind
         source: ./output
@@ -71,6 +76,22 @@ services:
         condition: service_healthy
       transaction-worker:
         condition: service_started
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: transaction-prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - type: bind
+        source: ./monitoring/prometheus.yml
+        target: /etc/prometheus/prometheus.yml
+        read_only: true
+    ports:
+      - "9090:9090"
+    depends_on:
+      - transaction-api
+      - transaction-worker
 
 volumes:
   postgres-data:
