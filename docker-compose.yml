@@ -1,6 +1,27 @@
 services:
-  transaction-monitor:
-    build: .
-    container_name: transaction-monitor
+  transaction-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transaction-engine
+    command: python -m app.main --count 10000 --output output
     volumes:
-      - ./output:/app/output
+      - type: bind
+        source: ./output
+        target: /app/output
+
+  transaction-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: transaction-dashboard
+    command: streamlit run app/dashboard.py --server.address=0.0.0.0 --server.port=8501
+    ports:
+      - "8501:8501"
+    volumes:
+      - type: bind
+        source: ./output
+        target: /app/output
+    depends_on:
+      transaction-engine:
+        condition: service_completed_successfully
