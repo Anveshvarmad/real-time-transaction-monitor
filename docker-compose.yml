@@ -59,17 +59,18 @@ services:
   transaction-dashboard:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dashboard
     container_name: transaction-dashboard
-    command: streamlit run app/dashboard.py --server.address=0.0.0.0 --server.port=8501
+    environment:
+      DATABASE_URL: postgresql+psycopg://monitor:monitor@postgres:5432/transaction_monitor
+      PYTHONPATH: /app
     ports:
       - "8501:8501"
-    volumes:
-      - type: bind
-        source: ./output
-        target: /app/output
     depends_on:
-      - transaction-worker
+      postgres:
+        condition: service_healthy
+      transaction-worker:
+        condition: service_started
 
 volumes:
   postgres-data:
