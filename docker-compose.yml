@@ -1,0 +1,6 @@
+services:
+  transaction-monitor:
+    build: .
+    container_name: transaction-monitor
+    volumes:
+      - ./output:/app/output
