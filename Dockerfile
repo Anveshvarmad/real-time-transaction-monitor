@@ -2,13 +2,15 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+ENV PYTHONPATH=/app
+
 COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app app
-COPY db db
-COPY tests tests
+COPY app/ app/
+COPY db/ db/
+COPY configs/ configs/
 
 EXPOSE 8501
 

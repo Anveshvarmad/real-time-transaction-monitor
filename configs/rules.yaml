@@ -1,0 +1,214 @@
+settings:
+  configured_risk_countries:
+    - ZZ
+    - XY
+    - QX
+
+  high_risk_merchant_categories:
+    - crypto
+    - gambling
+    - jewelry
+    - electronics
+    - money_transfer
+
+rules:
+  HIGH_AMOUNT:
+    enabled: true
+    description: Transaction amount is above configured high amount threshold.
+    risk_points: 30
+    category: amount
+    params:
+      threshold: 5000
+
+  VERY_HIGH_AMOUNT:
+    enabled: true
+    description: Transaction amount is above configured very high amount threshold.
+    risk_points: 45
+    category: amount
+    params:
+      threshold: 10000
+
+  MICRO_TRANSACTION:
+    enabled: true
+    description: Transaction amount is unusually small.
+    risk_points: 10
+    category: amount
+    params:
+      threshold: 1
+
+  ROUND_AMOUNT:
+    enabled: true
+    description: Large round amount transaction detected.
+    risk_points: 10
+    category: amount
+    params:
+      min_amount: 1000
+      divisor: 1000
+
+  VELOCITY_5_MIN:
+    enabled: true
+    description: User made too many transactions within 5 minutes.
+    risk_points: 35
+    category: velocity
+    params:
+      window_minutes: 5
+      max_transactions: 5
+
+  VELOCITY_1_HOUR:
+    enabled: true
+    description: User made too many transactions within 1 hour.
+    risk_points: 30
+    category: velocity
+    params:
+      window_minutes: 60
+      max_transactions: 10
+
+  CONFIGURED_RISK_COUNTRY:
+    enabled: true
+    description: Transaction country is present in configured risk country list.
+    risk_points: 35
+    category: location
+    params: {}
+
+  LOCATION_CHANGE_1_HOUR:
+    enabled: true
+    description: User changed transaction country within 1 hour.
+    risk_points: 30
+    category: location
+    params:
+      window_minutes: 60
+
+  ODD_HOUR_TRANSACTION:
+    enabled: true
+    description: Transaction happened during unusual hours.
+    risk_points: 15
+    category: time
+    params:
+      start_hour: 23
+      end_hour: 5
+
+  HIGH_RISK_MERCHANT_CATEGORY:
+    enabled: true
+    description: Merchant category is configured as high risk.
+    risk_points: 25
+    category: merchant
+    params: {}
+
+  NEW_MERCHANT_FOR_USER:
+    enabled: true
+    description: User is transacting with a new merchant after previous activity.
+    risk_points: 15
+    category: merchant
+    params:
+      min_history_count: 3
+
+  NEW_DEVICE_FOR_USER:
+    enabled: true
+    description: User is using a new device after previous activity.
+    risk_points: 25
+    category: device
+    params:
+      min_history_count: 3
+
+  MANY_USERS_SAME_DEVICE:
+    enabled: true
+    description: Multiple users used the same device within 24 hours.
+    risk_points: 35
+    category: device
+    params:
+      window_minutes: 1440
+      min_distinct_users: 3
+
+  MANY_USERS_SAME_IP:
+    enabled: true
+    description: Multiple users used the same IP address within 24 hours.
+    risk_points: 30
+    category: network
+    params:
+      window_minutes: 1440
+      min_distinct_users: 3
+
+  DUPLICATE_TRANSACTION_PATTERN:
+    enabled: true
+    description: Same user, merchant, and amount repeated within 10 minutes.
+    risk_points: 30
+    category: duplicate
+    params:
+      window_minutes: 10
+
+  FAILED_ATTEMPTS_BEFORE_SUCCESS:
+    enabled: true
+    description: Several failed attempts occurred before a successful transaction.
+    risk_points: 35
+    category: behavior
+    params:
+      window_minutes: 30
+      min_failed_attempts: 3
+
+  HIGH_AMOUNT_FAILED_TRANSACTION:
+    enabled: true
+    description: High-value transaction failed.
+    risk_points: 15
+    category: behavior
+    params:
+      threshold: 3000
+
+  MULTIPLE_COUNTRIES_24H:
+    enabled: true
+    description: User transacted from 3 or more countries within 24 hours.
+    risk_points: 40
+    category: location
+    params:
+      window_minutes: 1440
+      min_country_count: 3
+
+  LATE_NIGHT_HIGH_AMOUNT:
+    enabled: true
+    description: High-value transaction occurred during unusual hours.
+    risk_points: 30
+    category: time
+    params:
+      threshold: 2000
+      start_hour: 23
+      end_hour: 5
+
+  INTERNATIONAL_TRANSACTION:
+    enabled: true
+    description: Transaction country differs from user's home country.
+    risk_points: 15
+    category: location
+    params: {}
+
+  INTERNATIONAL_HIGH_AMOUNT:
+    enabled: true
+    description: High-value international transaction detected.
+    risk_points: 35
+    category: location
+    params:
+      threshold: 2000
+
+  CARD_NOT_PRESENT_HIGH_AMOUNT:
+    enabled: true
+    description: High-value online transaction detected.
+    risk_points: 25
+    category: channel
+    params:
+      threshold: 3000
+      channel: online
+
+  WIRE_TRANSFER_HIGH_AMOUNT:
+    enabled: true
+    description: High-value wire transfer detected.
+    risk_points: 25
+    category: payment
+    params:
+      threshold: 2000
+      payment_method: wire
+
+  NON_USD_TRANSACTION:
+    enabled: true
+    description: Transaction currency is not USD.
+    risk_points: 10
+    category: currency
+    params:
+      expected_currency: USD
