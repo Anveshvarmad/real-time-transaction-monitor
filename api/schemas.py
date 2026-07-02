@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List
 
 from pydantic import BaseModel, Field
 
@@ -22,43 +22,27 @@ class TransactionRequest(BaseModel):
     channel: str
 
 
-class RuleMatchResponse(BaseModel):
-    rule_code: str
-    description: str
-    risk_points: int
-    category: str
-
-
-class AlertResponse(BaseModel):
-    transaction_id: str
-    user_id: str
-    risk_score: int
-    alert_category: str
-    matched_rules: List[RuleMatchResponse]
-
-
-class TransactionIngestionResponse(BaseModel):
+class TransactionQueuedResponse(BaseModel):
     transaction_id: str
     status: str
-    alert_generated: bool
-    risk_score: int
-    alert_category: str
-    alert: Optional[AlertResponse]
+    queued: bool
+    queue_name: str
+    queue_depth: int
 
 
 class BulkTransactionRequest(BaseModel):
     transactions: List[TransactionRequest]
 
 
-class BulkTransactionResponse(BaseModel):
+class BulkTransactionQueuedResponse(BaseModel):
     total_received: int
-    total_alerts: int
-    results: List[TransactionIngestionResponse]
+    total_queued: int
+    queue_name: str
+    queue_depth: int
+    results: List[TransactionQueuedResponse]
 
 
-class EngineSummaryResponse(BaseModel):
-    total_transactions_processed: int
-    total_alerts_generated: int
-    alert_rate_percent: float
-    alert_categories: dict
-    top_triggered_rules: dict
+class QueueSummaryResponse(BaseModel):
+    queue_name: str
+    queue_backend: str
+    queue_depth: int

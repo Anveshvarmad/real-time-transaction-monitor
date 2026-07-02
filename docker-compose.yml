@@ -1,26 +1,39 @@
 services:
-  transaction-engine:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: transaction-engine
-    command: python -m app.main --count 10000 --output output
-    volumes:
-      - type: bind
-        source: ./output
-        target: /app/output
+  redis:
+    image: redis:7-alpine
+    container_name: transaction-redis
+    ports:
+      - "6379:6379"
 
   transaction-api:
     build:
       context: .
       dockerfile: Dockerfile.api
     container_name: transaction-api
+    environment:
+      QUEUE_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+      TRANSACTION_QUEUE: transactions:incoming
     ports:
       - "8000:8000"
+    depends_on:
+      - redis
+
+  transaction-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: transaction-worker
+    environment:
+      QUEUE_BACKEND: redis
+      REDIS_URL: redis://redis:6379/0
+      TRANSACTION_QUEUE: transactions:incoming
     volumes:
       - type: bind
         source: ./output
         target: /app/output
+    depends_on:
+      - redis
 
   transaction-dashboard:
     build:
@@ -35,5 +48,4 @@ services:
         source: ./output
         target: /app/output
     depends_on:
-      transaction-engine:
-        condition: service_completed_successfully
+      - transaction-worker

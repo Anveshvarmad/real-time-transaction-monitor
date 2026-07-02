@@ -15,7 +15,7 @@ def test_health_check():
     assert response.json()["status"] == "healthy"
 
 
-def test_high_risk_transaction_ingestion():
+def test_transaction_ingestion_queues_message():
     payload = {
         "transaction_id": "TXN_API_001",
         "user_id": "U_API_TEST",
@@ -39,12 +39,12 @@ def test_high_risk_transaction_ingestion():
 
     assert response.status_code == 200
     assert body["transaction_id"] == "TXN_API_001"
-    assert body["alert_generated"] is True
-    assert body["risk_score"] >= 30
-    assert body["alert"] is not None
+    assert body["status"] == "queued"
+    assert body["queued"] is True
+    assert body["queue_depth"] >= 1
 
 
-def test_bulk_transaction_ingestion():
+def test_bulk_transaction_ingestion_queues_messages():
     payload = {
         "transactions": [
             {
@@ -89,4 +89,14 @@ def test_bulk_transaction_ingestion():
 
     assert response.status_code == 200
     assert body["total_received"] == 2
-    assert body["total_alerts"] >= 1
+    assert body["total_queued"] == 2
+    assert body["queue_depth"] >= 2
+
+
+def test_queue_summary():
+    response = client.get("/transactions/queue")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["queue_backend"] == "memory"
+    assert body["queue_name"] == "transactions:incoming"

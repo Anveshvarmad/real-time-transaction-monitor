@@ -1,97 +1,69 @@
-from dataclasses import asdict
 from typing import List
 
 from fastapi import APIRouter
 
 from api.schemas import (
-    AlertResponse,
+    BulkTransactionQueuedResponse,
     BulkTransactionRequest,
-    BulkTransactionResponse,
-    EngineSummaryResponse,
-    RuleMatchResponse,
-    TransactionIngestionResponse,
+    QueueSummaryResponse,
+    TransactionQueuedResponse,
     TransactionRequest,
 )
-from app.engine import MonitoringEngine
-from app.models import Transaction
+from app.transaction_queue import (
+    QUEUE_NAME,
+    enqueue_transaction,
+    get_backend_name,
+    get_queue_depth,
+)
 
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
-engine = MonitoringEngine()
 
-
-def convert_request_to_transaction(request: TransactionRequest) -> Transaction:
-    payload = request.model_dump()
-    return Transaction(**payload)
-
-
-def convert_alert_response(alert) -> AlertResponse:
-    return AlertResponse(
-        transaction_id=alert.transaction_id,
-        user_id=alert.user_id,
-        risk_score=alert.risk_score,
-        alert_category=alert.alert_category,
-        matched_rules=[
-            RuleMatchResponse(**asdict(rule))
-            for rule in alert.matched_rules
-        ],
-    )
-
-
-def process_single_transaction(
+def queue_single_transaction(
     request: TransactionRequest,
-) -> TransactionIngestionResponse:
-    transaction = convert_request_to_transaction(request)
-    alert = engine.process_transaction(transaction)
+) -> TransactionQueuedResponse:
+    payload = request.model_dump(mode="json")
+    queue_depth = enqueue_transaction(payload)
 
-    if alert is None:
-        return TransactionIngestionResponse(
-            transaction_id=transaction.transaction_id,
-            status="processed",
-            alert_generated=False,
-            risk_score=0,
-            alert_category="LOW_RISK",
-            alert=None,
-        )
-
-    alert_response = convert_alert_response(alert)
-
-    return TransactionIngestionResponse(
-        transaction_id=transaction.transaction_id,
-        status="processed",
-        alert_generated=True,
-        risk_score=alert.risk_score,
-        alert_category=alert.alert_category,
-        alert=alert_response,
+    return TransactionQueuedResponse(
+        transaction_id=request.transaction_id,
+        status="queued",
+        queued=True,
+        queue_name=QUEUE_NAME,
+        queue_depth=queue_depth,
     )
 
 
-@router.post("", response_model=TransactionIngestionResponse)
+@router.post("", response_model=TransactionQueuedResponse)
 def ingest_transaction(
     request: TransactionRequest,
-) -> TransactionIngestionResponse:
-    return process_single_transaction(request)
+) -> TransactionQueuedResponse:
+    return queue_single_transaction(request)
 
 
-@router.post("/bulk", response_model=BulkTransactionResponse)
+@router.post("/bulk", response_model=BulkTransactionQueuedResponse)
 def ingest_bulk_transactions(
     request: BulkTransactionRequest,
-) -> BulkTransactionResponse:
-    results: List[TransactionIngestionResponse] = []
+) -> BulkTransactionQueuedResponse:
+    results: List[TransactionQueuedResponse] = []
 
     for transaction in request.transactions:
-        results.append(process_single_transaction(transaction))
+        results.append(queue_single_transaction(transaction))
 
-    total_alerts = sum(1 for result in results if result.alert_generated)
-
-    return BulkTransactionResponse(
+    return BulkTransactionQueuedResponse(
         total_received=len(request.transactions),
-        total_alerts=total_alerts,
+        total_queued=len(results),
+        queue_name=QUEUE_NAME,
+        queue_depth=get_queue_depth(),
         results=results,
     )
 
 
-@router.get("/summary", response_model=EngineSummaryResponse)
-def get_engine_summary() -> EngineSummaryResponse:
-    return EngineSummaryResponse(**engine.summary())
+@router.get("/queue", response_model=QueueSummaryResponse)
+def get_queue_summary() -> QueueSummaryResponse:
+    return QueueSummaryResponse(
+        queue_name=QUEUE_NAME,
+        queue_backend=get_backend_name(),
+        queue_depth=get_queue_depth(),
+    )
