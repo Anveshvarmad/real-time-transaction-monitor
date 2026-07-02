@@ -212,3 +212,21 @@ rules:
     category: currency
     params:
       expected_currency: USD
+
+  ML_ANOMALY_SCORE:
+    enabled: true
+    description: Isolation Forest model classified this transaction as anomalous.
+    risk_points: 25
+    category: ml
+    params:
+      min_training_samples: 75
+      contamination: 0.08
+      random_state: 42
+
+  ML_HIGH_RISK_PATTERN:
+    enabled: true
+    description: ML anomaly model detected a high-risk transaction pattern.
+    risk_points: 35
+    category: ml
+    params:
+      anomaly_score_threshold: -0.08
