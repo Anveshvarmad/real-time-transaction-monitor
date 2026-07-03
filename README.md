@@ -171,41 +171,6 @@ HIGH_AMOUNT:
 
 Rules can be enabled, disabled, or tuned without changing Python code.
 
----
-
-## Screenshots
-
-Add screenshots inside:
-
-```text
-docs/screenshots/
-```
-
-Suggested screenshots:
-
-### FastAPI Docs
-
-```text
-docs/screenshots/fastapi-docs.png
-```
-
-### Streamlit Dashboard
-
-```text
-docs/screenshots/streamlit-dashboard.png
-```
-
-### Grafana Dashboard
-
-```text
-docs/screenshots/grafana-dashboard.png
-```
-
-### PostgreSQL Counts
-
-```text
-docs/screenshots/postgres-counts.png
-```
 
 ---
 
